@@ -1,0 +1,92 @@
+:root {
+  --title-size: 40px;
+  --status-size: 24px;
+  --small-size: 18px;
+  --cell-size: 100px;
+  --move-size: 24px;
+  color: #ccc;
+}
+
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+body {
+  background-color: #f0f0f0;
+  background-image: url("bg.webp");
+}
+
+.top-bar {
+  margin: 0 135px;
+}
+
+.title {
+  font-size: var(--title-size);
+  text-align: start;
+  padding-top: 10px;
+  border-bottom: 2px solid rgb(187, 183, 183);
+}
+
+.wrapper-container {
+  margin: 0 135px;
+  padding: 0 15px;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.container-game {
+  display: flex;
+  flex-direction: column;
+}
+
+.container-btns {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+}
+
+#reset-btn,
+#play-ai {
+  padding: 10px 20px;
+  font-size: var(--small-size);
+  cursor: pointer;
+}
+
+#game-status {
+  text-align: center;
+  margin: 25px 0;
+  font-size: var(--status-size);
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 5px;
+  background-color: rgba(255, 255, 255, 0.167);
+  border-radius: 10px;
+  box-shadow: 0 0 100px rgba(255, 255, 255, 0.298);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--cell-size);
+  width: var(--cell-size);
+  font-size: var(--move-size);
+  background-color: rgba(182, 165, 34, 0.425);
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 10px;
+}
+
+.cell:hover {
+  background-color: #d8c95398;
+}
