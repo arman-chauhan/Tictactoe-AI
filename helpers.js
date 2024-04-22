@@ -125,12 +125,56 @@ function checkTerminate(board) {
   return T;
 }
 
-function minimax(board) {
-  let moves = getMoves(board);
-  let randomIndex = Math.floor(Math.random() * getMoves.length);
+function heuristic(board) {
+  const _ = checkWinner(board);
+  if (_ === X) {
+    return 1;
+  } else if (_ === O) {
+    return -1;
+  }
+  return 0;
+}
 
-  let move = moves[randomIndex];
-  return move;
+function minimax(board, depth, maximizingPlayer) {
+  if (depth === 0 || checkTerminate(board)) {
+    return { value: heuristic(board), move: null };
+  }
+
+  if (maximizingPlayer) {
+    let value = -Infinity;
+    let bestMove = null;
+
+    const actions = getMoves(board);
+
+    for (let action of actions) {
+      const result = makeMove(board, action);
+
+      let { value: minimum } = minimax(result, depth - 1, false);
+
+      if (minimum > value) {
+        value = minimum;
+        bestMove = action;
+      }
+    }
+    return { value: value, move: bestMove };
+  } else {
+    let value = Infinity;
+    let bestMove = null;
+
+    const actions = getMoves(board);
+
+    for (let action of actions) {
+      const result = makeMove(board, action);
+      let { value: maximum } = minimax(result, depth - 1, true);
+
+      if (maximum < value) {
+        value = maximum;
+        bestMove = action;
+      }
+    }
+
+    return { value: value, move: bestMove };
+  }
 }
 
 export {
