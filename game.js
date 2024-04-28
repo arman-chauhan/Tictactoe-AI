@@ -1,62 +1,121 @@
 import * as h from "./helpers.js";
+import { Player } from "./player.js";
 
 const BOARD = document.getElementById("board");
 const STATUS = document.getElementById("game-status");
 const RESET = document.getElementById("reset-btn");
-const PLAY_AI = document.getElementById("play-ai");
-
-let gameOver = false;
-let gameBoard = h.initial_state();
-let currentPlayer = h.player(gameBoard);
-let playingAi = false;
+const SWITCH = document.getElementById("switch-mode");
 
 function celebrate(winner) {
-  STATUS.textContent = currentPlayer + " won the game!";
+  STATUS.textContent = winner + " won the game!";
 }
+
 function gameTie() {
   STATUS.textContent = "Game ended in a tie.";
 }
+function makeRandomMove(player) {
+  const availableMoves = h.getMoves(gameBoard);
+  const randomIndex = Math.floor(Math.random() * availableMoves.length);
 
-function handleEvent(event, row, col) {
-  if (event.target.textContent || gameOver) {
-    return;
-  }
+  const randomMove = availableMoves[randomIndex];
+  const [row, col] = randomMove;
 
-  let move = [row, col];
+  gameBoard = h.makeMove(gameBoard, randomMove);
 
-  currentPlayer = h.player(gameBoard);
-  event.target.textContent = currentPlayer;
+  const cell = document.querySelector(`.cell[data-index="${row},${col}"]`);
+  cell.textContent = player.symbol;
 
-  let nextPlayer = currentPlayer === h.X ? h.O : h.X;
-  STATUS.textContent = "Play as " + nextPlayer;
-
-  gameBoard = h.makeMove(gameBoard, move);
-
-  let winner = h.checkTerminate(gameBoard);
-
-  if (winner) {
-    gameOver = true;
-
-    if (winner === h.T) gameTie();
-    else celebrate(winner);
-  }
+  STATUS.textContent = "Play as O";
 }
 
 function reset() {
   gameOver = false;
   gameBoard = h.initial_state();
-  currentPlayer = h.player(gameBoard);
+  Array.from(BOARD.children).forEach((cell) => {
+    cell.textContent = h.EMPTY;
+  });
 
-  let cells = BOARD.children;
-  Array.from(cells).forEach((cell) => (cell.textContent = h.EMPTY));
+  if (player1.isAi) makeRandomMove(player1);
+  else STATUS.textContent = "Play as " + h.X;
 }
 
-STATUS.textContent = "Play as X";
+function getPlayers() {
+  const curSymbol = h.player(gameBoard);
+
+  if (curSymbol === h.X) {
+    return { current: player1, next: player2 };
+  }
+  return { current: player2, next: player1 };
+}
+
+function evaluateGameEndState() {
+  let winner = h.checkTerminate(gameBoard);
+  if (winner) {
+    gameOver = true;
+
+    if (winner === h.T) gameTie();
+    else celebrate(winner);
+
+    return true;
+  }
+  return false;
+}
+
+function handleAiMove(player) {
+  if (gameOver) {
+    return;
+  }
+
+  const maximizingPlyer = player.symbol === h.X ? true : false;
+
+  let tempBoard = gameBoard.map((row) => [...row]);
+  const {
+    move: [row, col],
+  } = h.minimax(tempBoard, maximizingPlyer);
+  gameBoard = h.makeMove(gameBoard, [row, col]);
+
+  const cell = document.querySelector(`.cell[data-index="${row},${col}"]`);
+  cell.textContent = player.symbol;
+}
+
+function handleEvent(event, i, j) {
+  if (gameOver || event.target.textContent) {
+    return;
+  }
+
+  let move = [i, j];
+
+  let { current: currentUser, next: nextUser } = getPlayers();
+
+  gameBoard = h.makeMove(gameBoard, move);
+  event.target.textContent = currentUser.symbol;
+
+  STATUS.textContent = "Play as " + nextUser.symbol;
+
+  evaluateGameEndState();
+
+  if (nextUser.isAi) {
+    STATUS.textContent = "Computer thinking...";
+    setTimeout(() => {
+      handleAiMove(nextUser);
+      if (!evaluateGameEndState())
+        STATUS.textContent = "Play as " + currentUser.symbol;
+    }, 1000);
+  }
+}
+
+let gameOver = false;
+let gameBoard = h.initial_state();
+let playingAi = false;
+
+let player1 = new Player("player1", h.X, false);
+let player2 = new Player("player2", h.O, false);
 
 for (let i = 0; i < 3; i++) {
   for (let j = 0; j < 3; j++) {
     const cell = document.createElement("div");
     cell.classList.add("cell");
+    cell.setAttribute("data-index", `${i},${j}`);
     cell.addEventListener("click", (event) => {
       handleEvent(event, i, j);
     });
@@ -64,10 +123,36 @@ for (let i = 0; i < 3; i++) {
   }
 }
 
+SWITCH.textContent = "Play AI";
+STATUS.textContent = "Play as X";
+
 RESET.addEventListener("click", () => {
   reset();
 });
 
-PLAY_AI.addEventListener("click", () => {
-  playingAi = true;
+SWITCH.addEventListener("click", () => {
+  playingAi = !playingAi;
+
+  if (!playingAi) {
+    player1.isAi = false;
+    player2.isAi = false;
+  }
+
+  reset();
+
+  if (playingAi) {
+    SWITCH.textContent = "Play Human";
+    const humanSymbol = prompt("Enter your symbol: ").toUpperCase();
+
+    if (humanSymbol === h.X) {
+      player2.isAi = true;
+      return;
+    } else {
+      player1.isAi = true;
+      makeRandomMove(player1);
+      return;
+    }
+  }
+
+  SWITCH.textContent = "Play AI";
 });

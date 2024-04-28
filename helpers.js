@@ -4,10 +4,6 @@ const T = "Tie";
 const EMPTY = null;
 
 function initial_state() {
-  /*
-  Returns the intial state of the board
-  */
-
   return [
     [EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY],
@@ -16,9 +12,6 @@ function initial_state() {
 }
 
 function player(board) {
-  /*
-  Returns current player
-  */
   let Xcount = 0;
   let Ocount = 0;
 
@@ -37,10 +30,6 @@ function player(board) {
 }
 
 function getMoves(board) {
-  /*
-  Returns all the available actions
-  */
-
   let moves = [];
 
   for (let i = 0; i < 3; i++) {
@@ -54,14 +43,18 @@ function getMoves(board) {
   return moves;
 }
 
-function makeMove(board, move) {
-  const moves = getMoves(board);
+function moveExists(moves, move) {
+  return moves.some(([row, col]) => row === move[0] && col === move[1]);
+}
 
-  if (moves.includes(move)) {
-    throw new Error("Invalid move");
+function makeMove(board, move) {
+  let moves = getMoves(board);
+
+  if (!moveExists) {
+    throw "Invalid move";
   }
 
-  let temp = [...board];
+  let temp = board.map((row) => [...row]);
 
   const [row, col] = move;
 
@@ -126,17 +119,19 @@ function checkTerminate(board) {
 }
 
 function heuristic(board) {
-  const _ = checkWinner(board);
-  if (_ === X) {
+  const winner = checkWinner(board);
+  if (winner === X) {
     return 1;
-  } else if (_ === O) {
+  } else if (winner === O) {
     return -1;
   }
   return 0;
 }
 
-function minimax(board, depth, maximizingPlayer) {
-  if (depth === 0 || checkTerminate(board)) {
+let nodeCount = 0;
+function minimax(board, maximizingPlayer) {
+  console.log(nodeCount);
+  if (checkTerminate(board)) {
     return { value: heuristic(board), move: null };
   }
 
@@ -148,14 +143,15 @@ function minimax(board, depth, maximizingPlayer) {
 
     for (let action of actions) {
       const result = makeMove(board, action);
+      const { value: minVal } = minimax(result, false);
+      nodeCount++;
 
-      let { value: minimum } = minimax(result, depth - 1, false);
-
-      if (minimum > value) {
-        value = minimum;
+      if (minVal > value) {
+        value = minVal;
         bestMove = action;
       }
     }
+
     return { value: value, move: bestMove };
   } else {
     let value = Infinity;
@@ -165,10 +161,11 @@ function minimax(board, depth, maximizingPlayer) {
 
     for (let action of actions) {
       const result = makeMove(board, action);
-      let { value: maximum } = minimax(result, depth - 1, true);
+      const { value: maxVal } = minimax(result, true);
+      nodeCount++;
 
-      if (maximum < value) {
-        value = maximum;
+      if (maxVal < value) {
+        value = maxVal;
         bestMove = action;
       }
     }
@@ -176,6 +173,8 @@ function minimax(board, depth, maximizingPlayer) {
     return { value: value, move: bestMove };
   }
 }
+
+window.nodeCount = nodeCount;
 
 export {
   X,
